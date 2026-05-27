@@ -1,11 +1,11 @@
 {
-    "display_name": "Chat-Artikel-Leser",
-    "loading_order": 100,
+    "display_name": "Chat Article Reader DE",
+    "loading_order": 101,
     "requires": [],
     "optional": [],
     "js": "index.js",
     "css": "style.css",
-    "author": "ChatReader",
+    "author": "ChatReaderDE",
     "version": "6.0.0",
     "homePage": ""
 }
