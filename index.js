@@ -1,7 +1,7 @@
 import { getContext } from '../../../extensions.js';
 
-const EXT_NAME = 'Chat-Artikel-Leser';
-const STORE_KEY = 'cr_data_de_v6';
+const EXT_NAME = 'Chat Article Reader DE';
+const STORE_KEY = 'crd_data_v6';
 const PAGE_SIZE = 50;
 
 let state = {
@@ -11,11 +11,11 @@ let state = {
     fontSize: 'm',
     playMode: 'seq',
     settings: {
-        enRate: 1,
         deRate: 1,
-        audioMode: 'deenmix',
-        showEN: true,
+        cnRate: 1,
+        audioMode: 'cndtmix',
         showDE: true,
+        showCN: true,
         showWW: true
     }
 };
@@ -59,11 +59,11 @@ function isMobile() {
 }
 
 function showToast(msg) {
-    let t = byId('cr-toast');
+    let t = byId('crd-toast');
     if (!t) {
         t = document.createElement('div');
-        t.id = 'cr-toast';
-        t.className = 'cr-toast';
+        t.id = 'crd-toast';
+        t.className = 'crd-toast';
         document.body.appendChild(t);
     }
     t.textContent = msg;
@@ -84,11 +84,11 @@ function loadState() {
             if (d.playMode) state.playMode = d.playMode;
             if (d.settings) {
                 const s = d.settings;
-                if (s.enRate !== undefined) state.settings.enRate = s.enRate;
                 if (s.deRate !== undefined) state.settings.deRate = s.deRate;
+                if (s.cnRate !== undefined) state.settings.cnRate = s.cnRate;
                 if (s.audioMode) state.settings.audioMode = s.audioMode;
-                if (s.showEN !== undefined) state.settings.showEN = s.showEN;
                 if (s.showDE !== undefined) state.settings.showDE = s.showDE;
+                if (s.showCN !== undefined) state.settings.showCN = s.showCN;
                 if (s.showWW !== undefined) state.settings.showWW = s.showWW;
             }
         }
@@ -123,21 +123,19 @@ function cleanMsg(raw) {
     return t.trim();
 }
 
-function isEnLine(line) {
-    const alpha = (line.match(/[a-zA-Z]/g) || []).length;
-    return alpha >= 3;
+function isDeLine(line) {
+    const de = (line.match(/[a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df]/g) || []).length;
+    const cn = (line.match(/[\u4e00-\u9fff]/g) || []).length;
+    return de > cn && de >= 3;
 }
 
-function isDeLine(line) {
-    if (!line) return false;
-    if (/[äöüÄÖÜß]/.test(line)) return true;
-    const dePattern = /\b(der|die|das|ein|eine|und|ist|sind|wird|wurde|werden|haben|hat|hatte|nicht|auch|sich|auf|mit|für|von|dem|den|des|einen|einer|einem|keine|kein|aber|oder|wenn|dass|weil|nach|über|unter|durch|ohne|gegen|noch|schon|sehr|nur|alle|viel|dieser|diese|dieses|jeder|jede|jedes|können|müssen|sollen|wollen|dürfen|möchten|ich|du|er|sie|es|wir|ihr|mein|dein|sein|unser|euer|mich|dich|uns|euch|ihm|ihnen|zum|zur|vom|beim|ans|ins|aufs)\b/i;
-    return dePattern.test(line);
+function isCnLine(line) {
+    return (line.match(/[\u4e00-\u9fff]/g) || []).length >= 2;
 }
 
 function isWwLine(line) {
     if (!line) return false;
-    const m = line.match(/[a-zA-Z][a-zA-Z'\u2019\-]*\s*\([^)]+\)/g);
+    const m = line.match(/[a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df][a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df'\u2019\-]*\s*\([^)]*[\u4e00-\u9fff][^)]*\)/g);
     return m && m.length >= 2;
 }
 
@@ -163,11 +161,11 @@ function parseMessages(messages, chatFile) {
         const sents = [];
         let i = 0;
         while (i < lines.length) {
-            if (i + 2 < lines.length && isEnLine(lines[i]) && (isDeLine(lines[i + 1]) || isEnLine(lines[i + 1])) && isWwLine(lines[i + 2])) {
-                sents.push({ en: lines[i], de: lines[i + 1], ww: lines[i + 2] });
+            if (i + 2 < lines.length && isDeLine(lines[i]) && isCnLine(lines[i + 1]) && isWwLine(lines[i + 2])) {
+                sents.push({ de: lines[i], cn: lines[i + 1], ww: lines[i + 2] });
                 i += 3;
-            } else if (i + 1 < lines.length && isEnLine(lines[i]) && isDeLine(lines[i + 1])) {
-                sents.push({ en: lines[i], de: lines[i + 1], ww: '' });
+            } else if (i + 1 < lines.length && isDeLine(lines[i]) && isCnLine(lines[i + 1])) {
+                sents.push({ de: lines[i], cn: lines[i + 1], ww: '' });
                 i += 2;
             } else {
                 i++;
@@ -318,9 +316,9 @@ function speakWord(w) {
     if (!w) return;
     cancelSpeak();
     const u = new SpeechSynthesisUtterance(w);
-    u.lang = 'en-US';
-    u.rate = state.settings.enRate;
-    const v = findVoice('en-US');
+    u.lang = 'de-DE';
+    u.rate = state.settings.deRate;
+    const v = findVoice('de-DE');
     if (v) u.voice = v;
     try { speechSynthesis.speak(u); } catch (e) {}
 }
@@ -353,9 +351,9 @@ function updateMS(playing) {
     try {
         const art = getArt();
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: art ? art.title : 'Chat-Leser',
+            title: art ? art.title : 'Chat Reader DE',
             artist: selectedChar || '',
-            album: 'Englisch'
+            album: 'Deutsch'
         });
         navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
         navigator.mediaSession.setActionHandler('play', () => togglePlay());
@@ -369,7 +367,7 @@ function cleanW(w) {
     return (w || '').replace(/^[.,!?;:'"()\-\u2013\u00bb\u00ab\[\]{}\/\\]+/, '').replace(/[.,!?;:'"()\-\u2013\u00bb\u00ab\u2026\[\]{}\/\\]+$/, '').trim();
 }
 
-function renderEN(text) {
+function renderDE(text) {
     if (!text) return '';
     const cleaned = text.replace(/\|/g, '');
     const parts = cleaned.split(/(\s+)/);
@@ -377,12 +375,12 @@ function renderEN(text) {
     for (const part of parts) {
         if (!part) continue;
         if (/^\s+$/.test(part)) { html += ' '; continue; }
-        if (/[a-zA-Z]/.test(part)) {
-            const m = part.match(/^([^a-zA-Z]*)([a-zA-Z][a-zA-Z'\u2019\-]*[a-zA-Z]|[a-zA-Z])([^a-zA-Z]*)$/);
+        if (/[a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df]/.test(part)) {
+            const m = part.match(/^([^a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df]*)([a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df][a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df'\u2019\-]*[a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df]|[a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df])([^a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df]*)$/);
             if (m) {
-                html += escHtml(m[1]) + '<span class="cr-word" data-w="' + escAttr(cleanW(m[2])) + '">' + escHtml(m[2]) + '</span>' + escHtml(m[3]);
+                html += escHtml(m[1]) + '<span class="crd-word" data-w="' + escAttr(cleanW(m[2])) + '">' + escHtml(m[2]) + '</span>' + escHtml(m[3]);
             } else {
-                html += '<span class="cr-word" data-w="' + escAttr(cleanW(part)) + '">' + escHtml(part) + '</span>';
+                html += '<span class="crd-word" data-w="' + escAttr(cleanW(part)) + '">' + escHtml(part) + '</span>';
             }
         } else {
             html += escHtml(part);
@@ -400,7 +398,7 @@ function showTip(el, text) {
     hideTip();
     const r = el.getBoundingClientRect();
     const tip = document.createElement('div');
-    tip.className = 'cr-tooltip';
+    tip.className = 'crd-tooltip';
     tip.textContent = text;
     tip.style.left = (r.left + r.width / 2) + 'px';
     if (r.top > 50) {
@@ -453,43 +451,43 @@ function createPanel() {
     panelCreated = true;
 
     const panel = document.createElement('div');
-    panel.id = 'cr-panel';
+    panel.id = 'crd-panel';
     panel.innerHTML =
-        '<div class="cr-topbar">' +
-            '<button class="cr-topbar-back" id="crBack">◀</button>' +
-            '<span class="cr-topbar-title" id="crTitle">📖 Chat-Leser</span>' +
-            '<button class="cr-topbtn" id="crRefresh" title="Aktualisieren">♻</button>' +
-            '<button class="cr-topbtn" id="crSettings" title="Einstellungen">⚙</button>' +
-            '<button class="cr-topbtn" id="crClose" title="Schließen">✕</button>' +
+        '<div class="crd-topbar">' +
+            '<button class="crd-topbar-back" id="crdBack">◀</button>' +
+            '<span class="crd-topbar-title" id="crdTitle">📘 Deutsch Reader</span>' +
+            '<button class="crd-topbtn" id="crdRefresh" title="刷新">♻</button>' +
+            '<button class="crd-topbtn" id="crdSettings" title="设置">⚙</button>' +
+            '<button class="crd-topbtn" id="crdClose" title="关闭">✕</button>' +
         '</div>' +
-        '<div class="cr-body">' +
-            '<div class="cr-sidebar" id="crSidebar">' +
-                '<div class="cr-chartabs" id="crChars"></div>' +
-                '<div class="cr-artlist" id="crArts"><div class="cr-empty">Klicken Sie auf eine Charakterkarte zum Laden</div></div>' +
+        '<div class="crd-body">' +
+            '<div class="crd-sidebar" id="crdSidebar">' +
+                '<div class="crd-chartabs" id="crdChars"></div>' +
+                '<div class="crd-artlist" id="crdArts"><div class="crd-empty">点击角色卡加载文章</div></div>' +
             '</div>' +
-            '<div class="cr-main" id="crMain">' +
-                '<div class="cr-view on" id="crVWel">' +
-                    '<div class="cr-welcome"><div style="font-size:48px">📖</div><h3>Chat-Artikel-Leser</h3><p>Wählen Sie links eine Charakterkarte, um Chatverläufe zu scannen.<br>Klicken Sie auf englische Wörter für Aussprache und Übersetzung.<br>Unterstützt Reihenfolge-, Wiederholungs- und Zufallswiedergabe.</p></div>' +
+            '<div class="crd-main" id="crdMain">' +
+                '<div class="crd-view on" id="crdVWel">' +
+                    '<div class="crd-welcome"><div style="font-size:48px">📘</div><h3>Chat Article Reader DE</h3><p>选择左侧角色卡，自动扫描聊天记录。<br>点击德语单词播放发音并显示翻译。<br>支持顺序、循环、随机播放。</p></div>' +
                 '</div>' +
-                '<div class="cr-view" id="crVRead">' +
-                    '<div class="cr-toolbar" id="crToolbar"></div>' +
-                    '<div class="cr-optbar" id="crFontBar"></div>' +
-                    '<div class="cr-optbar" id="crModeBar"></div>' +
-                    '<div class="cr-plbar" id="crPL"><span>📋 <b id="crPLName">—</b></span><button class="cr-topbtn" id="crPLClose" style="width:24px;height:24px;font-size:11px">✕</button></div>' +
-                    '<div class="cr-progress"><div class="cr-progbar"><div class="cr-progfill" id="crProgFill"></div></div><div class="cr-progmeta"><span id="crProgIdx">0/0</span><span id="crProgTitle">—</span></div></div>' +
-                    '<div class="cr-pager" id="crPager"></div>' +
-                    '<div class="cr-reader fs-m" id="crReader"></div>' +
-                    '<div class="cr-controls">' +
-                        '<span class="cr-speedbtn" id="crSpeed">1.0x</span>' +
-                        '<button class="cr-ctrl" id="crPrev">⏮</button>' +
-                        '<button class="cr-ctrl playbtn" id="crPlay">▶️</button>' +
-                        '<button class="cr-ctrl" id="crNext">⏭</button>' +
-                        '<button class="cr-ctrl" id="crLoop">🔁</button>' +
-                        '<button class="cr-ctrl" id="crGoList">📋</button>' +
+                '<div class="crd-view" id="crdVRead">' +
+                    '<div class="crd-toolbar" id="crdToolbar"></div>' +
+                    '<div class="crd-optbar" id="crdFontBar"></div>' +
+                    '<div class="crd-optbar" id="crdModeBar"></div>' +
+                    '<div class="crd-plbar" id="crdPL"><span>📋 <b id="crdPLName">—</b></span><button class="crd-topbtn" id="crdPLClose" style="width:24px;height:24px;font-size:11px">✕</button></div>' +
+                    '<div class="crd-progress"><div class="crd-progbar"><div class="crd-progfill" id="crdProgFill"></div></div><div class="crd-progmeta"><span id="crdProgIdx">0/0</span><span id="crdProgTitle">—</span></div></div>' +
+                    '<div class="crd-pager" id="crdPager"></div>' +
+                    '<div class="crd-reader dfs-m" id="crdReader"></div>' +
+                    '<div class="crd-controls">' +
+                        '<span class="crd-speedbtn" id="crdSpeed">1.0x</span>' +
+                        '<button class="crd-ctrl" id="crdPrev">⏮</button>' +
+                        '<button class="crd-ctrl playbtn" id="crdPlay">▶️</button>' +
+                        '<button class="crd-ctrl" id="crdNext">⏭</button>' +
+                        '<button class="crd-ctrl" id="crdLoop">🔁</button>' +
+                        '<button class="crd-ctrl" id="crdGoList">📋</button>' +
                     '</div>' +
                 '</div>' +
-                '<div class="cr-view" id="crVSet">' +
-                    '<div class="cr-setbody" id="crSetBody"></div>' +
+                '<div class="crd-view" id="crdVSet">' +
+                    '<div class="crd-setbody" id="crdSetBody"></div>' +
                 '</div>' +
             '</div>' +
         '</div>';
@@ -500,17 +498,17 @@ function createPanel() {
 
 function addSettingsUI() {
     const settingsHtml = `
-    <div id="cr-settings-block" class="extension_block">
+    <div id="crd-settings-block" class="extension_block">
         <div class="inline-drawer">
             <div class="inline-drawer-toggle inline-drawer-header">
-                <b>📖 Chat-Artikel-Leser</b>
+                <b>📘 Chat Article Reader DE</b>
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
             </div>
             <div class="inline-drawer-content">
-                <button id="cr-launch-btn" class="cr-open-btn">📖 Leser öffnen</button>
-                <div class="cr-desc">
-                    Scannt englische Lerninhalte in Chatverläufen.<br>
-                    Unterstützt Dreizeilenformat: Englisch + Deutsch + Wort-für-Wort.
+                <button id="crd-launch-btn" class="crd-open-btn">📘 打开德语阅读器</button>
+                <div class="crd-desc">
+                    扫描聊天记录中的德语学习内容。<br>
+                    支持三行格式：德文 + 中文 + 逐词标注。
                 </div>
             </div>
         </div>
@@ -522,7 +520,7 @@ function addSettingsUI() {
     }
 
     setTimeout(() => {
-        const btn = document.getElementById('cr-launch-btn');
+        const btn = document.getElementById('crd-launch-btn');
         if (btn) {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -534,17 +532,17 @@ function addSettingsUI() {
 }
 
 function addWandButton() {
-    const wandBtnHtml = `<div id="cr-wand-btn" class="list-group-item flex-container flexGap5" title="Chat-Leser">
-        <span>📖</span> Leser
+    const wandBtnHtml = `<div id="crd-wand-btn" class="list-group-item flex-container flexGap5" title="Chat Reader DE">
+        <span>📘</span> Deutsch
     </div>`;
 
     const addToMenu = () => {
-        if (byId('cr-wand-btn')) return;
+        if (byId('crd-wand-btn')) return;
 
         const wandMenu = document.getElementById('extensionsMenu');
         if (wandMenu) {
             wandMenu.insertAdjacentHTML('beforeend', wandBtnHtml);
-            const btn = byId('cr-wand-btn');
+            const btn = byId('crd-wand-btn');
             if (btn) {
                 btn.style.cursor = 'pointer';
                 btn.addEventListener('click', (e) => {
@@ -557,12 +555,12 @@ function addWandButton() {
         }
 
         const sendForm = document.getElementById('send_form');
-        if (sendForm && !byId('cr-float-btn')) {
+        if (sendForm && !byId('crd-float-btn')) {
             const floatBtn = document.createElement('button');
-            floatBtn.id = 'cr-float-btn';
-            floatBtn.textContent = '📖';
-            floatBtn.title = 'Chat-Leser';
-            floatBtn.style.cssText = 'position:fixed;bottom:80px;right:10px;width:48px;height:48px;border-radius:50%;border:2px solid #000;background:#000;color:#fff;font-size:20px;cursor:pointer;z-index:99990;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent;';
+            floatBtn.id = 'crd-float-btn';
+            floatBtn.textContent = '📘';
+            floatBtn.title = 'Chat Reader DE';
+            floatBtn.style.cssText = 'position:fixed;bottom:140px;right:10px;width:48px;height:48px;border-radius:50%;border:2px solid #1a5276;background:#1a5276;color:#fff;font-size:20px;cursor:pointer;z-index:99990;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent;';
             floatBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -584,7 +582,7 @@ function addWandButton() {
 
 function openPanel() {
     createPanel();
-    const panel = byId('cr-panel');
+    const panel = byId('crd-panel');
     if (!panel) return;
     if (panel.classList.contains('open')) return;
 
@@ -592,16 +590,16 @@ function openPanel() {
 
     if (isMobile()) {
         mobileScreen = 'list';
-        const sidebar = byId('crSidebar');
-        const main = byId('crMain');
+        const sidebar = byId('crdSidebar');
+        const main = byId('crdMain');
         if (sidebar) sidebar.classList.remove('hide');
         if (main) main.classList.add('hide');
-        const back = byId('crBack');
+        const back = byId('crdBack');
         if (back) back.classList.remove('show');
-        byId('crTitle').textContent = '📖 Chat-Leser';
+        byId('crdTitle').textContent = '📘 Deutsch Reader';
     } else {
-        byId('crSidebar').classList.remove('hide');
-        byId('crMain').classList.remove('hide');
+        byId('crdSidebar').classList.remove('hide');
+        byId('crdMain').classList.remove('hide');
     }
 
     refreshChars();
@@ -609,7 +607,7 @@ function openPanel() {
 }
 
 function closePanel() {
-    const panel = byId('cr-panel');
+    const panel = byId('crd-panel');
     if (panel) panel.classList.remove('open');
 }
 
@@ -619,15 +617,15 @@ function refreshChars() {
 }
 
 function renderCharTabs() {
-    const el = byId('crChars');
+    const el = byId('crdChars');
     if (!el) return;
     if (!charList.length) {
-        el.innerHTML = '<span style="color:#aaa;font-size:11px;padding:6px">Keine Charakterkarten</span>';
+        el.innerHTML = '<span style="color:#aaa;font-size:11px;padding:6px">无角色卡</span>';
         return;
     }
     let html = '';
     for (const c of charList) {
-        html += '<button class="cr-chartab' + (c.name === selectedChar ? ' on' : '') + '" data-name="' + escAttr(c.name) + '" data-avatar="' + escAttr(c.avatar) + '">' + escHtml(c.name) + '</button>';
+        html += '<button class="crd-chartab' + (c.name === selectedChar ? ' on' : '') + '" data-name="' + escAttr(c.name) + '" data-avatar="' + escAttr(c.avatar) + '">' + escHtml(c.name) + '</button>';
     }
     el.innerHTML = html;
 }
@@ -641,7 +639,7 @@ async function selectChar(name) {
     saveState();
     renderCharTabs();
 
-    byId('crArts').innerHTML = '<div class="cr-empty">⏳ Wird gescannt...</div>';
+    byId('crdArts').innerHTML = '<div class="crd-empty">⏳ 扫描中...</div>';
 
     const data = await loadCharData(name, ch.avatar);
     if (selectedChar !== name) return;
@@ -649,7 +647,7 @@ async function selectChar(name) {
     renderArtList(data.articles);
 
     if (!data.articles.length) {
-        byId('crArts').innerHTML = '<div class="cr-empty">Keine Dreizeilen-Inhalte für diesen Charakter</div>';
+        byId('crdArts').innerHTML = '<div class="crd-empty">此角色无三行格式内容</div>';
     }
 
     const saved = state.positions[name];
@@ -659,10 +657,10 @@ async function selectChar(name) {
 }
 
 function renderArtList(articles) {
-    const el = byId('crArts');
+    const el = byId('crdArts');
     if (!el) return;
     if (!articles.length) {
-        el.innerHTML = '<div class="cr-empty">Keine Dreizeilen-Inhalte für diesen Charakter</div>';
+        el.innerHTML = '<div class="crd-empty">此角色无三行格式内容</div>';
         return;
     }
 
@@ -680,19 +678,19 @@ function renderArtList(articles) {
     for (const gn of order) {
         const items = groups[gn];
         if (order.length > 1) {
-            html += '<div class="cr-chatlabel">' + (gn === 'current' ? '📍 Aktueller Chat' : '📄 ' + escHtml(gn.substring(0, 20))) + '</div>';
+            html += '<div class="crd-chatlabel">' + (gn === 'current' ? '📍 当前聊天' : '📄 ' + escHtml(gn.substring(0, 20))) + '</div>';
         }
         for (const item of items) {
             const isCur = item.idx === selectedArt;
             const isLV = item.idx === lv && !isCur;
-            html += '<div class="cr-artcard' + (isCur ? ' playing' : '') + (isLV ? ' lastview' : '') + '" data-idx="' + item.idx + '">' +
-                '<div class="cr-artnum">' + item.art.floor + '</div>' +
-                '<div class="cr-artinfo"><div class="cr-artname">' + escHtml(item.art.title) + '</div><div class="cr-artmeta">' + item.art.sentences.length + ' Sätze</div></div>' +
-                '<span class="cr-artbadge">' + item.art.sentences.length + '</span></div>';
+            html += '<div class="crd-artcard' + (isCur ? ' playing' : '') + (isLV ? ' lastview' : '') + '" data-idx="' + item.idx + '">' +
+                '<div class="crd-artnum">' + item.art.floor + '</div>' +
+                '<div class="crd-artinfo"><div class="crd-artname">' + escHtml(item.art.title) + '</div><div class="crd-artmeta">' + item.art.sentences.length + '句</div></div>' +
+                '<span class="crd-artbadge">' + item.art.sentences.length + '</span></div>';
         }
     }
 
-    html += '<div class="cr-playallwrap"><button class="cr-playallbtn" id="crPlayAll">▶ Alle abspielen (' + articles.length + ' Artikel)</button></div>';
+    html += '<div class="crd-playallwrap"><button class="crd-playallbtn" id="crdPlayAll">▶ 连续播放全部 (' + articles.length + '篇)</button></div>';
     el.innerHTML = html;
 }
 
@@ -711,19 +709,19 @@ function openArt(idx, startSent) {
 
     if (isMobile()) {
         mobileScreen = 'reader';
-        byId('crSidebar').classList.add('hide');
-        byId('crMain').classList.remove('hide');
-        byId('crBack').classList.add('show');
-        byId('crTitle').textContent = data.articles[idx].title;
+        byId('crdSidebar').classList.add('hide');
+        byId('crdMain').classList.remove('hide');
+        byId('crdBack').classList.add('show');
+        byId('crdTitle').textContent = data.articles[idx].title;
     }
 
     renderArtList(data.articles);
 }
 
 function switchView(v) {
-    const wel = byId('crVWel');
-    const read = byId('crVRead');
-    const set = byId('crVSet');
+    const wel = byId('crdVWel');
+    const read = byId('crdVRead');
+    const set = byId('crdVSet');
     if (wel) wel.classList.toggle('on', v === 'welcome');
     if (read) read.classList.toggle('on', v === 'reader');
     if (set) set.classList.toggle('on', v === 'settings');
@@ -733,10 +731,10 @@ function goBack() {
     stopPlay();
     if (isMobile()) {
         mobileScreen = 'list';
-        byId('crSidebar').classList.remove('hide');
-        byId('crMain').classList.add('hide');
-        byId('crBack').classList.remove('show');
-        byId('crTitle').textContent = '📖 Chat-Leser';
+        byId('crdSidebar').classList.remove('hide');
+        byId('crdMain').classList.add('hide');
+        byId('crdBack').classList.remove('show');
+        byId('crdTitle').textContent = '📘 Deutsch Reader';
     }
 }
 
@@ -759,27 +757,27 @@ function doRender() {
     const ps = pageIdx * PAGE_SIZE;
     const pe = Math.min(ps + PAGE_SIZE, ss.length);
 
-    const pf = byId('crProgFill');
+    const pf = byId('crdProgFill');
     if (pf) pf.style.width = Math.round((sentenceIdx + 1) / ss.length * 100) + '%';
-    const pi = byId('crProgIdx');
+    const pi = byId('crdProgIdx');
     if (pi) pi.textContent = (sentenceIdx + 1) + '/' + ss.length;
-    const pt = byId('crProgTitle');
+    const pt = byId('crdProgTitle');
     if (pt) pt.textContent = art.title;
 
-    const pgr = byId('crPager');
+    const pgr = byId('crdPager');
     if (pgr) {
         if (tp > 1) {
-            let h = '<button class="cr-pgbtn" data-p="0"' + (pageIdx === 0 ? ' disabled' : '') + '>⏮</button>';
-            h += '<button class="cr-pgbtn" data-p="' + (pageIdx - 1) + '"' + (pageIdx === 0 ? ' disabled' : '') + '>◀</button>';
+            let h = '<button class="crd-pgbtn" data-p="0"' + (pageIdx === 0 ? ' disabled' : '') + '>⏮</button>';
+            h += '<button class="crd-pgbtn" data-p="' + (pageIdx - 1) + '"' + (pageIdx === 0 ? ' disabled' : '') + '>◀</button>';
             let sp = Math.max(0, pageIdx - 2);
             let ep = Math.min(tp, sp + 5);
             if (ep - sp < 5) sp = Math.max(0, ep - 5);
             for (let p = sp; p < ep; p++) {
-                h += '<button class="cr-pgbtn' + (p === pageIdx ? ' on' : '') + '" data-p="' + p + '">' + (p + 1) + '</button>';
+                h += '<button class="crd-pgbtn' + (p === pageIdx ? ' on' : '') + '" data-p="' + p + '">' + (p + 1) + '</button>';
             }
-            h += '<button class="cr-pgbtn" data-p="' + (pageIdx + 1) + '"' + (pageIdx >= tp - 1 ? ' disabled' : '') + '>▶</button>';
-            h += '<button class="cr-pgbtn" data-p="' + (tp - 1) + '"' + (pageIdx >= tp - 1 ? ' disabled' : '') + '>⏭</button>';
-            h += '<span class="cr-pgmeta">' + (ps + 1) + '-' + pe + '/' + ss.length + '</span>';
+            h += '<button class="crd-pgbtn" data-p="' + (pageIdx + 1) + '"' + (pageIdx >= tp - 1 ? ' disabled' : '') + '>▶</button>';
+            h += '<button class="crd-pgbtn" data-p="' + (tp - 1) + '"' + (pageIdx >= tp - 1 ? ' disabled' : '') + '>⏭</button>';
+            h += '<span class="crd-pgmeta">' + (ps + 1) + '-' + pe + '/' + ss.length + '</span>';
             pgr.innerHTML = h;
             pgr.classList.add('on');
         } else {
@@ -788,7 +786,7 @@ function doRender() {
         }
     }
 
-    const rd = byId('crReader');
+    const rd = byId('crdReader');
     if (rd) {
         const st = state.settings;
         let html = '';
@@ -796,39 +794,39 @@ function doRender() {
             const s = ss[i];
             const act = i === sentenceIdx;
             const dn = i < sentenceIdx;
-            const en = (s.en || '').replace(/\|/g, '');
             const de = (s.de || '').replace(/\|/g, '');
+            const cn = (s.cn || '').replace(/\|/g, '');
             const ww = (s.ww || '').replace(/\|/g, '');
 
-            html += '<div class="cr-sent' + (act ? ' active' : '') + (dn ? ' done' : '') + '" data-si="' + i + '">';
-            html += '<span class="cr-sentnum">#' + (i + 1) + '</span>';
-            html += '<div class="cr-en' + (st.showEN ? '' : ' cr-hidden') + '">' + renderEN(en) + '</div>';
-            html += '<div class="cr-de' + (st.showDE ? '' : ' cr-hidden') + '">' + escHtml(de) + '</div>';
-            if (ww) html += '<div class="cr-ww' + (st.showWW ? '' : ' cr-hidden') + '">' + renderEN(ww) + '</div>';
+            html += '<div class="crd-sent' + (act ? ' active' : '') + (dn ? ' done' : '') + '" data-si="' + i + '">';
+            html += '<span class="crd-sentnum">#' + (i + 1) + '</span>';
+            html += '<div class="crd-de' + (st.showDE ? '' : ' crd-hidden') + '">' + renderDE(de) + '</div>';
+            html += '<div class="crd-cn' + (st.showCN ? '' : ' crd-hidden') + '">' + escHtml(cn) + '</div>';
+            if (ww) html += '<div class="crd-ww' + (st.showWW ? '' : ' crd-hidden') + '">' + renderDE(ww) + '</div>';
             html += '</div>';
         }
         rd.innerHTML = html;
-        rd.className = 'cr-reader fs-' + (state.fontSize || 'm');
+        rd.className = 'crd-reader dfs-' + (state.fontSize || 'm');
         setTimeout(() => {
             const actEl = rd.querySelector('.active');
             if (actEl) actEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 50);
     }
 
-    const pb = byId('crPlay');
+    const pb = byId('crdPlay');
     if (pb) { pb.textContent = isPlaying ? '⏸' : '▶️'; pb.classList.toggle('on', isPlaying); }
 
-    const lb = byId('crLoop');
+    const lb = byId('crdLoop');
     if (lb) lb.classList.toggle('loopon', state.playMode === 'loop');
 
-    const sb = byId('crSpeed');
-    if (sb) sb.textContent = state.settings.enRate.toFixed(1) + 'x';
+    const sb = byId('crdSpeed');
+    if (sb) sb.textContent = state.settings.deRate.toFixed(1) + 'x';
 
-    const plBar = byId('crPL');
+    const plBar = byId('crdPL');
     if (plBar) {
         if (playlistOn) {
             plBar.classList.add('on');
-            const pln = byId('crPLName');
+            const pln = byId('crdPLName');
             if (pln) pln.textContent = art.title + ' (' + (playlistIdx + 1) + '/' + playlistArts.length + ')';
         } else {
             plBar.classList.remove('on');
@@ -841,44 +839,44 @@ function doRender() {
 }
 
 function renderTB() {
-    const el = byId('crToolbar');
+    const el = byId('crdToolbar');
     if (!el) return;
     const s = state.settings;
     el.innerHTML =
-        '<button class="cr-tbtn' + (s.audioMode === 'deenmix' ? ' on' : '') + '" data-am="deenmix">🔊DE+EN</button>' +
-        '<button class="cr-tbtn' + (s.audioMode === 'enonly' ? ' on' : '') + '" data-am="enonly">🔊Nur EN</button>' +
-        '<button class="cr-tbtn' + (s.audioMode === 'wwonly' ? ' on' : '') + '" data-am="wwonly">🔊Vokabeln</button>' +
-        '<span class="cr-tsep"></span>' +
-        '<button class="cr-tbtn' + (s.showEN ? ' on' : '') + '" data-sh="en">Englisch</button>' +
-        '<button class="cr-tbtn' + (s.showDE ? ' on' : '') + '" data-sh="de">Deutsch</button>' +
-        '<button class="cr-tbtn' + (s.showWW ? ' on' : '') + '" data-sh="ww">Vokabeln</button>';
+        '<button class="crd-tbtn' + (s.audioMode === 'cndtmix' ? ' on' : '') + '" data-am="cndtmix">🔊中德</button>' +
+        '<button class="crd-tbtn' + (s.audioMode === 'dtonly' ? ' on' : '') + '" data-am="dtonly">🔊纯德</button>' +
+        '<button class="crd-tbtn' + (s.audioMode === 'wwonly' ? ' on' : '') + '" data-am="wwonly">🔊词汇</button>' +
+        '<span class="crd-tsep"></span>' +
+        '<button class="crd-tbtn' + (s.showDE ? ' on' : '') + '" data-sh="de">德文</button>' +
+        '<button class="crd-tbtn' + (s.showCN ? ' on' : '') + '" data-sh="cn">中文</button>' +
+        '<button class="crd-tbtn' + (s.showWW ? ' on' : '') + '" data-sh="ww">词汇</button>';
 }
 
 function renderFB() {
-    const el = byId('crFontBar');
+    const el = byId('crdFontBar');
     if (!el) return;
-    const sizes = [['s', 'S'], ['m', 'M'], ['l', 'L'], ['xl', 'XL']];
-    let h = '<label>Schriftgröße:</label>';
+    const sizes = [['s', '小'], ['m', '中'], ['l', '大'], ['xl', '特大']];
+    let h = '<label>字号:</label>';
     for (const sz of sizes) {
-        h += '<button class="cr-optbtn' + (state.fontSize === sz[0] ? ' on' : '') + '" data-fs="' + sz[0] + '">' + sz[1] + '</button>';
+        h += '<button class="crd-optbtn' + (state.fontSize === sz[0] ? ' on' : '') + '" data-fs="' + sz[0] + '">' + sz[1] + '</button>';
     }
     el.innerHTML = h;
 }
 
 function renderMB() {
-    const el = byId('crModeBar');
+    const el = byId('crdModeBar');
     if (!el) return;
-    const modes = [['seq', 'Reihenfolge'], ['loop', 'Wiederholung'], ['shuffle', 'Zufällig']];
-    let h = '<label>Wiedergabe:</label>';
+    const modes = [['seq', '顺序'], ['loop', '单篇循环'], ['shuffle', '随机']];
+    let h = '<label>播放:</label>';
     for (const m of modes) {
-        h += '<button class="cr-optbtn' + (state.playMode === m[0] ? ' on' : '') + '" data-pm="' + m[0] + '">' + m[1] + '</button>';
+        h += '<button class="crd-optbtn' + (state.playMode === m[0] ? ' on' : '') + '" data-pm="' + m[0] + '">' + m[1] + '</button>';
     }
     el.innerHTML = h;
 }
 
 function togglePlay() {
     if (isPlaying) { stopPlay(); schedRender(); return; }
-    if (!getArt()) { showToast('Bitte wählen Sie zuerst einen Artikel'); return; }
+    if (!getArt()) { showToast('请先选择文章'); return; }
     isPlaying = true;
     startKeepAlive();
     updateMS(true);
@@ -896,8 +894,8 @@ async function playStep() {
     savePos();
 
     const s = art.sentences[sentenceIdx];
-    const en = (s.en || '').replace(/\|/g, '');
     const de = (s.de || '').replace(/\|/g, '');
+    const cn = (s.cn || '').replace(/\|/g, '');
     const mode = state.settings.audioMode;
 
     speechId++;
@@ -907,22 +905,22 @@ async function playStep() {
     if (speechId !== myId || !isPlaying) return;
 
     if (mode === 'wwonly' && s.ww) {
-        const pairs = (s.ww || '').match(/([a-zA-Z][a-zA-Z'\u2019\-]*)\s*\(([^)]+)\)/g) || [];
+        const pairs = (s.ww || '').match(/([a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df][a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df'\u2019\-]*)\s*\(([^)]+)\)/g) || [];
         for (const pair of pairs) {
             if (speechId !== myId || !isPlaying) return;
-            const mm = pair.match(/([a-zA-Z][a-zA-Z'\u2019\-]*)\s*\(([^)]+)\)/);
+            const mm = pair.match(/([a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df][a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df'\u2019\-]*)\s*\(([^)]+)\)/);
             if (mm) {
-                await speak(mm[1], 'en-US', state.settings.enRate);
+                await speak(mm[1], 'de-DE', state.settings.deRate);
                 if (speechId !== myId || !isPlaying) return;
-                await speak(mm[2], 'de-DE', state.settings.deRate);
+                await speak(mm[2], 'zh-CN', state.settings.cnRate);
                 if (speechId !== myId || !isPlaying) return;
             }
         }
     } else {
-        await speak(en, 'en-US', state.settings.enRate);
+        await speak(de, 'de-DE', state.settings.deRate);
         if (speechId !== myId || !isPlaying) return;
-        if (mode === 'deenmix' && de) {
-            await speak(de, 'de-DE', state.settings.deRate);
+        if (mode === 'cndtmix' && cn) {
+            await speak(cn, 'zh-CN', state.settings.cnRate);
             if (speechId !== myId || !isPlaying) return;
         }
     }
@@ -944,7 +942,7 @@ function handleEnd() {
     if (playlistOn) {
         playlistIdx++;
         if (playlistIdx >= playlistArts.length) {
-            showToast('🎉 Wiedergabeliste beendet');
+            showToast('🎉 列表播放完成');
             stopPlay(); playlistOn = false; schedRender(); return;
         }
         selectedArt = data.articles.indexOf(playlistArts[playlistIdx]);
@@ -961,7 +959,7 @@ function handleEnd() {
         selectedArt++; sentenceIdx = 0; savePos(); renderArtList(data.articles); playStep(); return;
     }
 
-    sentenceIdx = 0; showToast('🎉 Alles abgeschlossen'); stopPlay(); schedRender();
+    sentenceIdx = 0; showToast('🎉 全部完成'); stopPlay(); schedRender();
 }
 
 function navSent(dir) {
@@ -975,15 +973,15 @@ function navSent(dir) {
     const s = art.sentences[sentenceIdx];
     if (s) {
         cancelSpeak();
-        speak((s.en || '').replace(/\|/g, ''), 'en-US', state.settings.enRate).then(() => {
-            if (state.settings.audioMode === 'deenmix' && s.de) speak((s.de || '').replace(/\|/g, ''), 'de-DE', state.settings.deRate);
+        speak((s.de || '').replace(/\|/g, ''), 'de-DE', state.settings.deRate).then(() => {
+            if (state.settings.audioMode === 'cndtmix' && s.cn) speak((s.cn || '').replace(/\|/g, ''), 'zh-CN', state.settings.cnRate);
         });
     }
 }
 
 function startPlayAll() {
     const data = charDataCache[selectedChar];
-    if (!data || !data.articles.length) { showToast('Keine Artikel'); return; }
+    if (!data || !data.articles.length) { showToast('无文章'); return; }
 
     if (state.playMode === 'shuffle') {
         playlistArts = data.articles.slice();
@@ -1002,136 +1000,136 @@ function startPlayAll() {
 
     if (isMobile()) {
         mobileScreen = 'reader';
-        byId('crSidebar').classList.add('hide');
-        byId('crMain').classList.remove('hide');
-        byId('crBack').classList.add('show');
+        byId('crdSidebar').classList.add('hide');
+        byId('crdMain').classList.remove('hide');
+        byId('crdBack').classList.add('show');
     }
 
     isPlaying = true; startKeepAlive(); updateMS(true); playStep();
 }
 
 function renderSetView() {
-    const el = byId('crSetBody');
+    const el = byId('crdSetBody');
     if (!el) return;
     const s = state.settings;
     el.innerHTML =
-        '<div style="font-size:16px;font-weight:700;color:#000;margin-bottom:12px">⚙ Einstellungen</div>' +
-        '<div class="cr-setrow"><label>Englische Geschwindigkeit</label><div style="display:flex;align-items:center;gap:6px"><input type="range" id="crER" min="0.5" max="2.5" step="0.1" value="' + s.enRate + '"><span class="val" id="crERV">' + s.enRate.toFixed(1) + 'x</span></div></div>' +
-        '<div class="cr-setrow"><label>Deutsche Geschwindigkeit</label><div style="display:flex;align-items:center;gap:6px"><input type="range" id="crDR" min="0.5" max="2.5" step="0.1" value="' + s.deRate + '"><span class="val" id="crDRV">' + s.deRate.toFixed(1) + 'x</span></div></div>' +
-        '<div class="cr-setinfo"><div style="font-weight:700;color:#000;margin-bottom:4px">📖 Anleitung</div>' +
-        '<div>• Scannt alle Chat-Verläufe der Charakterkarten</div>' +
-        '<div>• Erkennt Dreizeilenformat: EN + DE + Wörter</div>' +
-        '<div>• Klick auf Wort: Aussprache & Übersetzung</div>' +
-        '<div>• Reihenfolge / Wiederholung / Zufall</div>' +
-        '<div>• Hintergrundwiedergabe + Sperrbildschirm</div>' +
-        '<div>• Automatische Positionsspeicherung</div>' +
-        '<div>• S / M / L / XL Schriftgröße</div>' +
-        '<div style="margin-top:6px;color:#bbb">v6.0.0</div></div>';
+        '<div style="font-size:16px;font-weight:700;color:#1a5276;margin-bottom:12px">⚙ 设置</div>' +
+        '<div class="crd-setrow"><label>德语语速</label><div style="display:flex;align-items:center;gap:6px"><input type="range" id="crdDR" min="0.5" max="2.5" step="0.1" value="' + s.deRate + '"><span class="val" id="crdDRV">' + s.deRate.toFixed(1) + 'x</span></div></div>' +
+        '<div class="crd-setrow"><label>中文语速</label><div style="display:flex;align-items:center;gap:6px"><input type="range" id="crdCR" min="0.5" max="2.5" step="0.1" value="' + s.cnRate + '"><span class="val" id="crdCRV">' + s.cnRate.toFixed(1) + 'x</span></div></div>' +
+        '<div class="crd-setinfo"><div style="font-weight:700;color:#1a5276;margin-bottom:4px">📘 说明</div>' +
+        '<div>• 扫描所有角色卡聊天记录</div>' +
+        '<div>• 识别三行格式: 德文+中文+逐词</div>' +
+        '<div>• 点击单词播放德语发音显示翻译</div>' +
+        '<div>• 顺序/循环/随机播放</div>' +
+        '<div>• 后台播放+锁屏控制</div>' +
+        '<div>• 自动记录位置</div>' +
+        '<div>• 小/中/大/特大字号</div>' +
+        '<div style="margin-top:6px;color:#bbb">v6.0.0 DE</div></div>';
 }
 
 function bindEvents() {
-    byId('crClose').addEventListener('click', e => { e.preventDefault(); closePanel(); });
+    byId('crdClose').addEventListener('click', e => { e.preventDefault(); closePanel(); });
 
-    byId('crBack').addEventListener('click', e => {
+    byId('crdBack').addEventListener('click', e => {
         e.preventDefault();
-        if (byId('crVSet').classList.contains('on')) {
+        if (byId('crdVSet').classList.contains('on')) {
             if (selectedArt >= 0) {
                 switchView('reader');
-                if (isMobile()) byId('crTitle').textContent = getArt() ? getArt().title : '📖';
+                if (isMobile()) byId('crdTitle').textContent = getArt() ? getArt().title : '📘';
             } else goBack();
         } else goBack();
     });
 
-    byId('crRefresh').addEventListener('click', e => {
+    byId('crdRefresh').addEventListener('click', e => {
         e.preventDefault();
         charDataCache = {};
         refreshChars();
         if (selectedChar) selectChar(selectedChar);
-        showToast('Aktualisierung abgeschlossen');
+        showToast('刷新完成');
     });
 
-    byId('crSettings').addEventListener('click', e => {
+    byId('crdSettings').addEventListener('click', e => {
         e.preventDefault();
-        if (byId('crVSet').classList.contains('on')) {
+        if (byId('crdVSet').classList.contains('on')) {
             if (selectedArt >= 0) {
                 switchView('reader');
-                if (isMobile()) byId('crTitle').textContent = getArt() ? getArt().title : '📖';
+                if (isMobile()) byId('crdTitle').textContent = getArt() ? getArt().title : '📘';
             } else { switchView('welcome'); if (isMobile()) goBack(); }
         } else {
             renderSetView(); switchView('settings');
             if (isMobile()) {
-                byId('crSidebar').classList.add('hide');
-                byId('crMain').classList.remove('hide');
-                byId('crBack').classList.add('show');
-                byId('crTitle').textContent = '⚙ Einstellungen';
+                byId('crdSidebar').classList.add('hide');
+                byId('crdMain').classList.remove('hide');
+                byId('crdBack').classList.add('show');
+                byId('crdTitle').textContent = '⚙ 设置';
             }
         }
     });
 
-    byId('crChars').addEventListener('click', e => {
-        const tab = e.target.closest('.cr-chartab');
+    byId('crdChars').addEventListener('click', e => {
+        const tab = e.target.closest('.crd-chartab');
         if (tab) { e.preventDefault(); selectChar(tab.dataset.name); }
     });
 
-    byId('crArts').addEventListener('click', e => {
-        const card = e.target.closest('.cr-artcard');
+    byId('crdArts').addEventListener('click', e => {
+        const card = e.target.closest('.crd-artcard');
         if (card) { e.preventDefault(); openArt(parseInt(card.dataset.idx)); return; }
-        const pa = e.target.closest('#crPlayAll');
+        const pa = e.target.closest('#crdPlayAll');
         if (pa) { e.preventDefault(); startPlayAll(); }
     });
 
-    byId('crToolbar').addEventListener('click', e => {
-        const btn = e.target.closest('.cr-tbtn');
+    byId('crdToolbar').addEventListener('click', e => {
+        const btn = e.target.closest('.crd-tbtn');
         if (!btn) return;
         e.preventDefault();
         if (btn.dataset.am) { state.settings.audioMode = btn.dataset.am; saveState(); schedRender(); }
-        if (btn.dataset.sh === 'en') { state.settings.showEN = !state.settings.showEN; saveState(); schedRender(); }
         if (btn.dataset.sh === 'de') { state.settings.showDE = !state.settings.showDE; saveState(); schedRender(); }
+        if (btn.dataset.sh === 'cn') { state.settings.showCN = !state.settings.showCN; saveState(); schedRender(); }
         if (btn.dataset.sh === 'ww') { state.settings.showWW = !state.settings.showWW; saveState(); schedRender(); }
     });
 
-    byId('crFontBar').addEventListener('click', e => {
-        const btn = e.target.closest('.cr-optbtn');
+    byId('crdFontBar').addEventListener('click', e => {
+        const btn = e.target.closest('.crd-optbtn');
         if (btn && btn.dataset.fs) {
             e.preventDefault(); state.fontSize = btn.dataset.fs; saveState(); renderFB();
-            const rd = byId('crReader'); if (rd) rd.className = 'cr-reader fs-' + state.fontSize;
+            const rd = byId('crdReader'); if (rd) rd.className = 'crd-reader dfs-' + state.fontSize;
         }
     });
 
-    byId('crModeBar').addEventListener('click', e => {
-        const btn = e.target.closest('.cr-optbtn');
+    byId('crdModeBar').addEventListener('click', e => {
+        const btn = e.target.closest('.crd-optbtn');
         if (btn && btn.dataset.pm) { e.preventDefault(); state.playMode = btn.dataset.pm; saveState(); renderMB(); schedRender(); }
     });
 
-    byId('crPager').addEventListener('click', e => {
-        const btn = e.target.closest('.cr-pgbtn');
-        if (btn && !btn.disabled) { e.preventDefault(); pageIdx = parseInt(btn.dataset.p); schedRender(); byId('crReader').scrollTo(0, 0); }
+    byId('crdPager').addEventListener('click', e => {
+        const btn = e.target.closest('.crd-pgbtn');
+        if (btn && !btn.disabled) { e.preventDefault(); pageIdx = parseInt(btn.dataset.p); schedRender(); byId('crdReader').scrollTo(0, 0); }
     });
 
-    byId('crPLClose').addEventListener('click', e => { e.preventDefault(); playlistOn = false; stopPlay(); schedRender(); });
+    byId('crdPLClose').addEventListener('click', e => { e.preventDefault(); playlistOn = false; stopPlay(); schedRender(); });
 
-    byId('crPlay').addEventListener('click', e => { e.preventDefault(); togglePlay(); });
-    byId('crPrev').addEventListener('click', e => { e.preventDefault(); navSent(-1); });
-    byId('crNext').addEventListener('click', e => { e.preventDefault(); navSent(1); });
+    byId('crdPlay').addEventListener('click', e => { e.preventDefault(); togglePlay(); });
+    byId('crdPrev').addEventListener('click', e => { e.preventDefault(); navSent(-1); });
+    byId('crdNext').addEventListener('click', e => { e.preventDefault(); navSent(1); });
 
-    byId('crLoop').addEventListener('click', e => {
+    byId('crdLoop').addEventListener('click', e => {
         e.preventDefault(); state.playMode = state.playMode === 'loop' ? 'seq' : 'loop'; saveState(); schedRender();
     });
 
-    byId('crSpeed').addEventListener('click', e => {
+    byId('crdSpeed').addEventListener('click', e => {
         e.preventDefault();
         const speeds = [0.5, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.5, 2.0];
-        let ci = speeds.findIndex(s => Math.abs(s - state.settings.enRate) < 0.05);
-        state.settings.enRate = speeds[(ci + 1) % speeds.length];
+        let ci = speeds.findIndex(s => Math.abs(s - state.settings.deRate) < 0.05);
+        state.settings.deRate = speeds[(ci + 1) % speeds.length];
         saveState(); schedRender();
     });
 
-    byId('crGoList').addEventListener('click', e => { e.preventDefault(); goBack(); });
+    byId('crdGoList').addEventListener('click', e => { e.preventDefault(); goBack(); });
 
-    byId('crReader').addEventListener('click', e => {
-        const w = e.target.closest('.cr-word');
+    byId('crdReader').addEventListener('click', e => {
+        const w = e.target.closest('.crd-word');
         if (w) { e.preventDefault(); e.stopPropagation(); onWordClick(w); return; }
-        const s = e.target.closest('.cr-sent');
+        const s = e.target.closest('.crd-sent');
         if (s) {
             e.preventDefault();
             const idx = parseInt(s.dataset.si);
@@ -1141,35 +1139,35 @@ function bindEvents() {
                 if (art && art.sentences[idx]) {
                     const sent = art.sentences[idx];
                     cancelSpeak();
-                    speak((sent.en || '').replace(/\|/g, ''), 'en-US', state.settings.enRate).then(() => {
-                        if (state.settings.audioMode === 'deenmix' && sent.de) speak((sent.de || '').replace(/\|/g, ''), 'de-DE', state.settings.deRate);
+                    speak((sent.de || '').replace(/\|/g, ''), 'de-DE', state.settings.deRate).then(() => {
+                        if (state.settings.audioMode === 'cndtmix' && sent.cn) speak((sent.cn || '').replace(/\|/g, ''), 'zh-CN', state.settings.cnRate);
                     });
                 }
             }
         }
     });
 
-    byId('crSetBody').addEventListener('input', e => {
-        if (e.target.id === 'crER') {
-            state.settings.enRate = parseFloat(e.target.value);
-            const v = byId('crERV'); if (v) v.textContent = state.settings.enRate.toFixed(1) + 'x';
+    byId('crdSetBody').addEventListener('input', e => {
+        if (e.target.id === 'crdDR') {
+            state.settings.deRate = parseFloat(e.target.value);
+            const v = byId('crdDRV'); if (v) v.textContent = state.settings.deRate.toFixed(1) + 'x';
             saveState();
         }
-        if (e.target.id === 'crDR') {
-            state.settings.deRate = parseFloat(e.target.value);
-            const v = byId('crDRV'); if (v) v.textContent = state.settings.deRate.toFixed(1) + 'x';
+        if (e.target.id === 'crdCR') {
+            state.settings.cnRate = parseFloat(e.target.value);
+            const v = byId('crdCRV'); if (v) v.textContent = state.settings.cnRate.toFixed(1) + 'x';
             saveState();
         }
     });
 
     document.addEventListener('click', e => {
-        if (!e.target.closest('.cr-tooltip') && !e.target.closest('.cr-word')) hideTip();
+        if (!e.target.closest('.crd-tooltip') && !e.target.closest('.crd-word')) hideTip();
     });
 
     document.addEventListener('keydown', e => {
-        const panel = byId('cr-panel');
+        const panel = byId('crd-panel');
         if (!panel || !panel.classList.contains('open')) return;
-        if (!byId('crVRead') || !byId('crVRead').classList.contains('on')) return;
+        if (!byId('crdVRead') || !byId('crdVRead').classList.contains('on')) return;
         const tag = e.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
         if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
@@ -1184,5 +1182,5 @@ jQuery(async () => {
     addSettingsUI();
     addWandButton();
     initVoices();
-    console.log('[ChatLeser] v6.0 geladen');
+    console.log('[ChatReaderDE] v6.0 loaded');
 });
