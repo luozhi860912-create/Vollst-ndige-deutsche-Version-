@@ -1,0 +1,792 @@
+/* ===== Erweiterungseinstellungen ===== */
+#cr-settings-block {
+    padding: 8px;
+}
+
+#cr-settings-block .cr-open-btn {
+    width: 100%;
+    padding: 10px 0;
+    border-radius: 8px;
+    border: 2px solid #000;
+    background: #000;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    margin-bottom: 6px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#cr-settings-block .cr-open-btn:active {
+    opacity: 0.8;
+}
+
+#cr-settings-block .cr-desc {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+}
+
+/* ===== Vollbild-Panel ===== */
+#cr-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 2147483647;
+    display: none;
+    flex-direction: column;
+    background: #ffffff;
+    color: #000000;
+    font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow: hidden;
+}
+
+#cr-panel.open {
+    display: flex;
+}
+
+/* ===== Kopfleiste ===== */
+.cr-topbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: #ffffff;
+    border-bottom: 2px solid #000000;
+    flex-shrink: 0;
+    min-height: 40px;
+}
+
+.cr-topbar-back {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #000;
+    background: #fff;
+    color: #000;
+    font-size: 16px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-topbar-back.show {
+    display: flex;
+}
+
+.cr-topbar-title {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: #000000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cr-topbtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #000;
+    background: #fff;
+    color: #000;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-topbtn:active {
+    background: #eee;
+}
+
+/* ===== Hauptbereich ===== */
+.cr-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ===== Seitenleiste ===== */
+.cr-sidebar {
+    display: flex;
+    flex-direction: column;
+    background: #fafafa;
+    border-right: 1px solid #000;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cr-sidebar.hide {
+    display: none !important;
+}
+
+.cr-chartabs {
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+    overflow-x: auto;
+    border-bottom: 1px solid #ccc;
+    flex-shrink: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cr-chartab {
+    padding: 5px 12px;
+    border-radius: 14px;
+    border: 1px solid #000;
+    background: #fff;
+    color: #000;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-chartab.on {
+    background: #000;
+    color: #fff;
+}
+
+.cr-artlist {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cr-artcard {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    margin-bottom: 3px;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-artcard:active {
+    background: #f0f0f0;
+}
+
+.cr-artcard.playing {
+    border: 2px solid #000;
+    font-weight: 700;
+}
+
+.cr-artcard.lastview {
+    border-left: 4px solid #000;
+}
+
+.cr-artnum {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #eee;
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cr-artinfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.cr-artname {
+    font-size: 13px;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cr-artmeta {
+    font-size: 10px;
+    color: #888;
+}
+
+.cr-artbadge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #eee;
+    color: #555;
+    flex-shrink: 0;
+}
+
+.cr-chatlabel {
+    padding: 4px 6px;
+    font-size: 10px;
+    color: #999;
+    font-weight: 700;
+    border-bottom: 1px solid #eee;
+    margin-top: 3px;
+}
+
+.cr-empty {
+    padding: 30px 12px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    line-height: 2;
+}
+
+.cr-playallwrap {
+    text-align: center;
+    padding: 12px;
+}
+
+.cr-playallbtn {
+    padding: 8px 20px;
+    border-radius: 16px;
+    border: 2px solid #000;
+    background: #000;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== Hauptinhalt ===== */
+.cr-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.cr-main.hide {
+    display: none !important;
+}
+
+/* ===== Ansichten ===== */
+.cr-view {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.cr-view.on {
+    display: flex;
+}
+
+/* ===== Werkzeugleiste ===== */
+.cr-toolbar {
+    display: flex;
+    gap: 3px;
+    padding: 4px 6px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    overflow-x: auto;
+    flex-shrink: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cr-tbtn {
+    padding: 4px 9px;
+    border-radius: 10px;
+    border: 1px solid #888;
+    background: #fff;
+    color: #000;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-tbtn.on {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.cr-tsep {
+    width: 1px;
+    height: 16px;
+    background: #ccc;
+    align-self: center;
+    flex-shrink: 0;
+}
+
+/* ===== Optionsleisten ===== */
+.cr-optbar {
+    display: flex;
+    gap: 3px;
+    padding: 3px 6px;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.cr-optbar label {
+    font-size: 11px;
+    color: #888;
+    margin-right: 3px;
+}
+
+.cr-optbtn {
+    padding: 3px 8px;
+    border-radius: 8px;
+    border: 1px solid #888;
+    background: #fff;
+    color: #000;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-optbtn.on {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+/* ===== Wiedergabeliste ===== */
+.cr-plbar {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #fffff0;
+    border-bottom: 1px solid #ddd;
+    font-size: 11px;
+    color: #888;
+    flex-shrink: 0;
+}
+
+.cr-plbar.on {
+    display: flex;
+}
+
+.cr-plbar span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ===== Fortschritt ===== */
+.cr-progress {
+    padding: 3px 10px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+}
+
+.cr-progbar {
+    height: 3px;
+    background: #ddd;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.cr-progfill {
+    height: 100%;
+    background: #000;
+    border-radius: 2px;
+    transition: width 0.3s;
+}
+
+.cr-progmeta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #aaa;
+    margin-top: 1px;
+}
+
+/* ===== Seitennavigation ===== */
+.cr-pager {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 3px 4px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.cr-pager.on {
+    display: flex;
+}
+
+.cr-pgbtn {
+    min-width: 28px;
+    height: 24px;
+    padding: 0 5px;
+    border: 1px solid #888;
+    border-radius: 4px;
+    background: #fff;
+    color: #000;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-pgbtn.on {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.cr-pgbtn:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.cr-pgmeta {
+    font-size: 10px;
+    color: #aaa;
+    padding: 0 3px;
+}
+
+/* ===== Lesebereich ===== */
+.cr-reader {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+    -webkit-overflow-scrolling: touch;
+    background: #ffffff;
+}
+
+/* ===== Sätze ===== */
+.cr-sent {
+    margin-bottom: 6px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #ffffff;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-sent.active {
+    background: #fffff0;
+    border: 2px solid #000000;
+}
+
+.cr-sent.done {
+    border-left: 4px solid #000;
+}
+
+.cr-sentnum {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    font-size: 9px;
+    color: #ccc;
+}
+
+.cr-en {
+    font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    line-height: 1.7;
+    margin-bottom: 3px;
+    color: #000000;
+    font-weight: 600;
+}
+
+.cr-de {
+    color: #000000;
+    line-height: 1.6;
+    opacity: 0.6;
+}
+
+.cr-ww {
+    font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    line-height: 1.6;
+    color: #000000;
+    opacity: 0.5;
+    margin-top: 3px;
+    background: #fffff0;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border-left: 3px solid #cc9;
+}
+
+.cr-hidden {
+    display: none !important;
+}
+
+/* ===== Schriftgrößen ===== */
+.fs-s .cr-en { font-size: 14px; }
+.fs-s .cr-de { font-size: 12px; }
+.fs-s .cr-ww { font-size: 11px; }
+
+.fs-m .cr-en { font-size: 17px; }
+.fs-m .cr-de { font-size: 14px; }
+.fs-m .cr-ww { font-size: 13px; }
+
+.fs-l .cr-en { font-size: 21px; }
+.fs-l .cr-de { font-size: 17px; }
+.fs-l .cr-ww { font-size: 15px; }
+
+.fs-xl .cr-en { font-size: 25px; }
+.fs-xl .cr-de { font-size: 20px; }
+.fs-xl .cr-ww { font-size: 18px; }
+
+/* ===== Klickbare Wörter ===== */
+.cr-word {
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    padding: 0 1px;
+    border-radius: 2px;
+    display: inline;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-word:hover {
+    background: #fffde0;
+    border-bottom-color: #aaa;
+}
+
+.cr-word.speaking {
+    background: #fffde0;
+    border-bottom-color: #000;
+}
+
+/* ===== Tooltip ===== */
+.cr-tooltip {
+    position: fixed;
+    z-index: 2147483647;
+    background: #000;
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    max-width: 220px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    line-height: 1.4;
+    font-family: Georgia, 'Palatino Linotype', sans-serif;
+}
+
+.cr-tooltip.visible {
+    opacity: 1;
+}
+
+/* ===== Steuerung ===== */
+.cr-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #ffffff;
+    border-top: 2px solid #000;
+    flex-shrink: 0;
+}
+
+.cr-ctrl {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #000;
+    background: #fff;
+    color: #000;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cr-ctrl:active {
+    transform: scale(0.9);
+}
+
+.cr-ctrl.playbtn {
+    width: 46px;
+    height: 46px;
+    background: #000;
+    color: #fff;
+    border-color: #000;
+    font-size: 18px;
+}
+
+.cr-ctrl.playbtn.on {
+    background: #cc0000;
+    border-color: #cc0000;
+}
+
+.cr-ctrl.loopon {
+    background: #000;
+    color: #fff;
+}
+
+.cr-speedbtn {
+    font-size: 11px;
+    color: #000;
+    padding: 3px 8px;
+    border: 1px solid #000;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== Willkommen ===== */
+.cr-welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 24px;
+    text-align: center;
+}
+
+.cr-welcome h3 {
+    font-size: 18px;
+    color: #000;
+    margin: 8px 0;
+    font-weight: 700;
+}
+
+.cr-welcome p {
+    font-size: 14px;
+    line-height: 1.9;
+    max-width: 350px;
+    color: #555;
+}
+
+/* ===== Einstellungsansicht ===== */
+.cr-setbody {
+    padding: 14px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.cr-setrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cr-setrow label {
+    font-size: 14px;
+    color: #000;
+}
+
+.cr-setrow .val {
+    font-size: 12px;
+    color: #888;
+    min-width: 32px;
+    text-align: right;
+}
+
+.cr-setbody input[type=range] {
+    width: 90px;
+    accent-color: #000;
+}
+
+.cr-setinfo {
+    margin-top: 14px;
+    padding: 12px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #555;
+    line-height: 2;
+}
+
+/* ===== Benachrichtigung ===== */
+.cr-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #000;
+    color: #fff;
+    padding: 6px 18px;
+    border-radius: 16px;
+    font-size: 13px;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 2147483647;
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: 86vw;
+    font-family: Georgia, 'Palatino Linotype', sans-serif;
+}
+
+.cr-toast.on {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ===== Desktop ===== */
+@media (min-width: 769px) {
+    .cr-sidebar {
+        width: 270px;
+        min-width: 270px;
+    }
+}
+
+/* ===== Mobil ===== */
+@media (max-width: 768px) {
+    .cr-body {
+        flex-direction: column;
+    }
+    .cr-sidebar {
+        width: 100%;
+        flex: 1;
+        border-right: none;
+        border-bottom: 1px solid #000;
+    }
+    .cr-controls {
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+    .cr-topbar {
+        padding-top: max(4px, env(safe-area-inset-top));
+    }
+}
